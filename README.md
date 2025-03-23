@@ -61,7 +61,6 @@ This project is a Flask-based web application designed to fetch, summarize, and 
 ## Folder Structure
 
 ```
-│── Company/           # Stores fetched news data
 │── audios/            # Stores generated audio files
 │── templates/         # HTML templates
 │── app.py             # Flask application
