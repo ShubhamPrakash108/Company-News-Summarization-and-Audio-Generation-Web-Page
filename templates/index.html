@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company News Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        #loading {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        #results {
+            display: none;
+            margin-top: 30px;
+        }
+        
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+            margin-top: 20px;
+        }
+        
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            transition: 0.3s;
+            color: #333;
+        }
+        
+        .tab button:hover {
+            background-color: #ddd;
+        }
+        
+        .tab button.active {
+            background-color: #3498db;
+            color: white;
+        }
+        
+        .tabcontent {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-top: none;
+            animation: fadeEffect 1s;
+        }
+        
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #fff;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #3498db;
+        }
+        
+        .sentiment-positive {
+            color: green;
+            font-weight: bold;
+        }
+        
+        .sentiment-negative {
+            color: red;
+            font-weight: bold;
+        }
+        
+        .sentiment-neutral {
+            color: orange;
+            font-weight: bold;
+        }
+        
+        .summary {
+            background-color: #f9f9f9;
+            padding: 10px;
+            border-left: 3px solid #3498db;
+            margin: 10px 0;
+        }
+        
+        .topics {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 10px;
+        }
+        
+        .topic-tag {
+            background-color: #e1f5fe;
+            color: #0288d1;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+        
+        .comparison {
+            border-left: 3px solid #9b59b6;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .audio-player {
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        .chart-container {
+            height: 300px;
+            margin-top: 20px;
+        }
+        
+        pre {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Company News Analyzer</h1>
+        
+        <div class="form-group">
+            <label for="company-name">Enter Company Name:</label><br>
+            <input type="text" id="company-name" placeholder="e.g., Apple, Tesla, Microsoft">
+            <button id="analyze-btn">Analyze</button>
+        </div>
+        
+        <div id="loading">
+            <h3>Processing...</h3>
+            <p>This may take a few minutes. We're fetching news, analyzing sentiment, comparing articles, and generating audio.</p>
+        </div>
+        
+        <div id="results">
+            <h2 id="company-title"></h2>
+            
+            <div class="tab">
+                <button class="tablinks" onclick="openTab(event, 'articles-tab')" id="defaultOpen">Articles</button>
+                <button class="tablinks" onclick="openTab(event, 'sentiment-tab')">Sentiment Analysis</button>
+                <button class="tablinks" onclick="openTab(event, 'comparison-tab')">Comparisons</button>
+                <button class="tablinks" onclick="openTab(event, 'topics-tab')">Topics</button>
+                <button class="tablinks" onclick="openTab(event, 'audio-tab')">Audio Summary</button>
+                <button class="tablinks" onclick="openTab(event, 'json-tab')">Raw JSON</button>
+            </div>
+            
+            <div id="articles-tab" class="tabcontent">
+                <h3>News Articles</h3>
+                <div id="articles-container"></div>
+            </div>
+            
+            <div id="sentiment-tab" class="tabcontent">
+                <h3>Sentiment Analysis</h3>
+                <div class="chart-container">
+                    <canvas id="sentiment-chart"></canvas>
+                </div>
+                <div id="sentiment-summary"></div>
+            </div>
+            
+            <div id="comparison-tab" class="tabcontent">
+                <h3>Article Comparisons</h3>
+                <div id="comparisons-container"></div>
+            </div>
+            
+            <div id="topics-tab" class="tabcontent">
+                <h3>Topic Analysis</h3>
+                <div id="topics-container">
+                    <h4>Common Topics</h4>
+                    <div id="common-topics"></div>
+                    
+                    <h4>Unique Topics by Article</h4>
+                    <div id="unique-topics"></div>
+                </div>
+            </div>
+            
+            <div id="audio-tab" class="tabcontent">
+                <h3>Hindi Audio Summary</h3>
+                <p>Listen to the comparison summaries in Hindi:</p>
+                <audio id="audio-player" controls class="audio-player">
+                    <source id="audio-source" type="audio/wav">
+                    Your browser does not support the audio element.
+                </audio>
+            </div>
+            
+            <div id="json-tab" class="tabcontent">
+                <h3>Raw JSON Data</h3>
+                <pre id="json-container"></pre>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const analyzeBtn = document.getElementById('analyze-btn');
+            const companyInput = document.getElementById('company-name');
+            const loadingDiv = document.getElementById('loading');
+            const resultsDiv = document.getElementById('results');
+            const companyTitle = document.getElementById('company-title');
+            
+            document.getElementById('defaultOpen').click();
+            
+            analyzeBtn.addEventListener('click', function() {
+                const companyName = companyInput.value.trim();
+                
+                if (!companyName) {
+                    alert('Please enter a company name');
+                    return;
+                }
+                
+                loadingDiv.style.display = 'block';
+                resultsDiv.style.display = 'none';
+                
+                const formData = new FormData();
+                formData.append('company_name', companyName);
+                
+                fetch('/analyze', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    loadingDiv.style.display = 'none';
+                    
+                    if (data.error) {
+                        alert(data.error);
+                        return;
+                    }
+                    
+                    resultsDiv.style.display = 'block';
+                    companyTitle.textContent = `Analysis Results for ${companyName}`;
+                    
+                    populateArticlesTab(data.data.Articles);
+                    populateSentimentTab(data.data.Comparative_Sentiment_Score);
+                    populateComparisonsTab(data.data.Comparison_through_articles);
+                    populateTopicsTab(data.data.Comparative_Sentiment_Score.Topic_Overlap);
+                    populateAudioTab(companyName);
+                    populateJsonTab(data.data);
+                })
+                .catch(error => {
+                    loadingDiv.style.display = 'none';
+                    alert('An error occurred: ' + error);
+                });
+            });
+            
+            window.openTab = function(evt, tabName) {
+                const tabcontent = document.getElementsByClassName('tabcontent');
+                for (let i = 0; i < tabcontent.length; i++) {
+                    tabcontent[i].style.display = 'none';
+                }
+                
+                const tablinks = document.getElementsByClassName('tablinks');
+                for (let i = 0; i < tablinks.length; i++) {
+                    tablinks[i].className = tablinks[i].className.replace(' active', '');
+                }
+                
+                document.getElementById(tabName).style.display = 'block';
+                evt.currentTarget.className += ' active';
+            };
+            
+            function populateArticlesTab(articles) {
+                const container = document.getElementById('articles-container');
+                container.innerHTML = '';
+                
+                articles.forEach(article => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    const sentimentClass = 
+                        article.sentiment === 'Positive' ? 'sentiment-positive' :
+                        article.sentiment === 'Negative' ? 'sentiment-negative' : 'sentiment-neutral';
+                    
+                    let topicsHtml = '';
+                    if (article.topics && article.topics.length > 0) {
+                        topicsHtml = '<div class="topics">' + 
+                            article.topics.map(topic => `<span class="topic-tag">${topic}</span>`).join('') +
+                        '</div>';
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="card-title">${article.title}</div>
+                        <div>Sentiment: <span class="${sentimentClass}">${article.sentiment}</span></div>
+                        <div class="summary">
+                            <strong>Summary:</strong> ${article.summary}
+                        </div>
+                        <div><strong>Source:</strong> <a href="${article.url}" target="_blank">${article.url}</a></div>
+                        ${topicsHtml}
+                    `;
+                    
+                    container.appendChild(card);
+                });
+            }
+            
+            function populateSentimentTab(data) {
+                const container = document.getElementById('sentiment-summary');
+                container.innerHTML = '';
+                
+                if (data && data.Sentiment_Counts) {
+                    const sentimentCounts = data.Sentiment_Counts;
+                    
+                    const summary = document.createElement('div');
+                    summary.innerHTML = `
+                        <p><strong>Positive Articles:</strong> ${sentimentCounts.Positive}</p>
+                        <p><strong>Negative Articles:</strong> ${sentimentCounts.Negative}</p>
+                        <p><strong>Neutral Articles:</strong> ${sentimentCounts.Neutral}</p>
+                    `;
+                    
+                    container.appendChild(summary);
+                    
+                    const ctx = document.getElementById('sentiment-chart').getContext('2d');
+                    new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: ['Positive', 'Negative', 'Neutral'],
+                            datasets: [{
+                                data: [sentimentCounts.Positive, sentimentCounts.Negative, sentimentCounts.Neutral],
+                                backgroundColor: ['#2ecc71', '#e74c3c', '#f39c12']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Sentiment Distribution'
+                                }
+                            }
+                        }
+                    });
+                } else {
+                    container.innerHTML = '<p>No sentiment data available.</p>';
+                }
+            }
+            
+            function populateComparisonsTab(comparisons) {
+                const container = document.getElementById('comparisons-container');
+                container.innerHTML = '';
+                
+                if (comparisons && comparisons.length > 0) {
+                    comparisons.forEach((comparison, index) => {
+                        const div = document.createElement('div');
+                        div.className = 'comparison';
+                        div.innerHTML = `
+                            <h4>Comparison ${index + 1}</h4>
+                            <p>${comparison}</p>
+                        `;
+                        container.appendChild(div);
+                    });
+                } else {
+                    container.innerHTML = '<p>No comparisons available.</p>';
+                }
+            }
+            
+            function populateTopicsTab(topicData) {
+                const commonTopicsContainer = document.getElementById('common-topics');
+                const uniqueTopicsContainer = document.getElementById('unique-topics');
+                
+                commonTopicsContainer.innerHTML = '';
+                uniqueTopicsContainer.innerHTML = '';
+                
+                if (topicData && topicData['Common Topics']) {
+                    const commonTopics = topicData['Common Topics'];
+                    if (commonTopics.length > 0) {
+                        const topicsDiv = document.createElement('div');
+                        topicsDiv.className = 'topics';
+                        
+                        commonTopics.forEach(topic => {
+                            const topicSpan = document.createElement('span');
+                            topicSpan.className = 'topic-tag';
+                            topicSpan.textContent = topic;
+                            topicsDiv.appendChild(topicSpan);
+                        });
+                        
+                        commonTopicsContainer.appendChild(topicsDiv);
+                    } else {
+                        commonTopicsContainer.innerHTML = '<p>No common topics found.</p>';
+                    }
+                    
+                    const uniqueTopics = topicData['Unique Topics per Article'];
+                    if (uniqueTopics && uniqueTopics.length > 0) {
+                        uniqueTopics.forEach(item => {
+                            const card = document.createElement('div');
+                            card.className = 'card';
+                            
+                            let topicsHtml = '';
+                            if (item['Unique Topics'] && item['Unique Topics'].length > 0) {
+                                topicsHtml = '<div class="topics">' + 
+                                    item['Unique Topics'].map(topic => `<span class="topic-tag">${topic}</span>`).join('') +
+                                '</div>';
+                            } else {
+                                topicsHtml = '<p>No unique topics.</p>';
+                            }
+                            
+                            card.innerHTML = `
+                                <div class="card-title">${item.Article}</div>
+                                ${topicsHtml}
+                            `;
+                            
+                            uniqueTopicsContainer.appendChild(card);
+                        });
+                    } else {
+                        uniqueTopicsContainer.innerHTML = '<p>No unique topics data available.</p>';
+                    }
+                } else {
+                    commonTopicsContainer.innerHTML = '<p>No topic data available.</p>';
+                    uniqueTopicsContainer.innerHTML = '<p>No topic data available.</p>';
+                }
+            }
+            
+            function populateAudioTab(companyName) {
+                const audioSource = document.getElementById('audio-source');
+                audioSource.src = '/audio/merged_audio.wav';
+                
+                const audioPlayer = document.getElementById('audio-player');
+                audioPlayer.load();
+            }
+            
+            function populateJsonTab(data) {
+                const container = document.getElementById('json-container');
+                container.textContent = JSON.stringify(data, null, 2);
+            }
+        });
+    </script>
+</body>
+</html>
